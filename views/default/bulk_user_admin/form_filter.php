@@ -20,8 +20,9 @@ if ($banned) {
 }
 
 $banned_count = bulk_user_admin_get_users(array_merge($options, ['only_banned' => true]));
-$filter_body = '<p><label>' . elgg_view('input/checkbox', $banned_input_options)
-		. elgg_echo('bulk_user_admin:banned_only', [$banned_count]) . '</label></p>';
+$banned_input_options['label'] = elgg_echo('bulk_user_admin:banned_only', [$banned_count]);
+
+$filter_body = '<p>' . elgg_view('input/checkbox', $banned_input_options) . '</p>';
 
 $enqueued_input_options = array(
 	'name' => 'include_enqueued',
@@ -33,9 +34,9 @@ if ($include_enqueued) {
 } else {
 	$enqueued_count = bulk_user_admin_get_users(array_merge($options, ['enqueued' => 'only']));
 }
+$enqueued_input_options['label'] = elgg_echo('bulk_user_admin:include_enqueued', [$enqueued_count]);
 
-$filter_body .= '<p><label>' . elgg_view('input/checkbox', $enqueued_input_options)
-		. elgg_echo('bulk_user_admin:include_enqueued', [$enqueued_count]) . '</label></p>';
+$filter_body .= '<p>' . elgg_view('input/checkbox', $enqueued_input_options) . '</p>';
 
 $domain_input_options = array(
 	'name' => 'domain',
@@ -47,6 +48,7 @@ $input = elgg_view('input/text', $domain_input_options);
 $label = elgg_echo('bulk_user_admin:domain');
 $help = elgg_echo('bulk_user_admin:domain:help');
 $domain_count = '';
+$domain_count_txt = '';
 if ($domain) {
 	$domain_count = bulk_user_admin_get_users(array_merge($options, ['domain' => $domain]));
 	$domain_count_txt = elgg_echo('bulk_user_admin:domain_count', [$domain_count]);

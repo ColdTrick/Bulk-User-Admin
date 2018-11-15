@@ -73,18 +73,12 @@ function bulk_user_admin_get_users(array $sent) {
 		'type' => 'user',
 		'domain' => false,
 		'only_banned' => false,
-		'enqueued' => 'exclude'
+		'enqueued' => 'exclude',
+		'wheres' => [],
+		'joins' => [],
 	];
 
 	$options = array_merge($defaults, $sent);
-
-	if (!is_array($options['wheres'])) {
-		$options['wheres'] = [];
-	}
-
-	if (!is_array($options['joins'])) {
-		$options['joins'] = [];
-	}
 
 	// sometimes ue is joined, sometimes it's not...
 	// use our own join to make sure.
