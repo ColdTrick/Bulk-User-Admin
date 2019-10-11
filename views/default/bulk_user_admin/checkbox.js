@@ -3,6 +3,6 @@ define(function(require) {
     var $ = require("jquery");
 
     $("#checkAll").click(function () {
-        $('input:checkbox').not(this).prop('checked', this.checked);
+        $('.elgg-form-bulk-user-admin-delete input:checkbox').not(this).prop('checked', this.checked);
     });
 });
