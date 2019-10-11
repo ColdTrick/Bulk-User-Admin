@@ -10,6 +10,7 @@ $limit = get_input('limit', 30);
 $offset = get_input('offset', 0);
 $domain = get_input('domain');
 $banned = get_input('banned');
+$spam = get_input('spam');
 $include_enqueued = get_input('include_enqueued');
 
 $db_prefix = elgg_get_config("dbprefix");
@@ -19,6 +20,7 @@ $options = array(
 	'offset' => $offset,
 	'full_view' => false,
 	'only_banned' => $banned,
+	'spam' => $spam,
 	'domain' => $domain,
 	'enqueued' => $include_enqueued ? 'include' : 'exclude'
 );
@@ -38,6 +40,7 @@ $pagination = elgg_view('navigation/pagination', array(
 $form_vars = [
 	'users' => $users,
 	'banned' => $banned,
+	'spam' => $spam,
 	'domain' => $domain,
 	'include_enqueued' => $include_enqueued,
 	'options' => $options

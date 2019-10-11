@@ -7,85 +7,88 @@ $db_prefix = elgg_get_config('dbprefix');
 $users = elgg_extract('users', $vars);
 $domain = elgg_extract('domain', $vars);
 $banned = elgg_extract('banned', $vars);
+$spam = elgg_extract('spam', $vars);
 $include_enqueued = elgg_extract('include_enqueued', $vars);
 $options = elgg_extract('options', $vars);
 $options['count'] = true;
 
-$banned_input_options = array(
-	'name' => 'banned',
-	'value' => 1
-);
-if ($banned) {
-	$banned_input_options['checked'] = 'checked';
-}
+$filter_body = '';
 
+// banned user selection
 $banned_count = bulk_user_admin_get_users(array_merge($options, ['only_banned' => true]));
-$banned_input_options['label'] = elgg_echo('bulk_user_admin:banned_only', [$banned_count]);
+$filter_body .= elgg_view_field([
+	'#type' => 'checkbox',
+	'#label' => elgg_echo('bulk_user_admin:banned_only', [$banned_count]),
+	'name' => 'banned',
+	'value' => 1,
+	'checked' => (bool) $banned,
+]);
 
-$filter_body = '<p>' . elgg_view('input/checkbox', $banned_input_options) . '</p>';
+// spam accounts selection
+$spam_count = bulk_user_admin_get_users(array_merge($options, ['spam' => true]));
+$filter_body .= elgg_view_field([
+	'#type' => 'checkbox',
+	'#label' => elgg_echo('bulk_user_admin:spam', [$spam_count]),
+	'#help' => elgg_echo('bulk_user_admin:spam:help'),
+	'name' => 'spam',
+	'value' => 1,
+	'checked' => (bool) $spam,
+]);
 
-$enqueued_input_options = array(
+// queued for deletion
+$enqueued_count = bulk_user_admin_get_users(array_merge($options, ['enqueued' => 'only']));
+$filter_body .= elgg_view_field([
+	'#type' => 'checkbox',
+	'#label' => elgg_echo('bulk_user_admin:include_enqueued', [$enqueued_count]),
 	'name' => 'include_enqueued',
-	'value' => 1
-);
-if ($include_enqueued) {
-	$enqueued_input_options['checked'] = 'checked';
-	$enqueued_count = '0';
-} else {
-	$enqueued_count = bulk_user_admin_get_users(array_merge($options, ['enqueued' => 'only']));
-}
-$enqueued_input_options['label'] = elgg_echo('bulk_user_admin:include_enqueued', [$enqueued_count]);
+	'value' => 1,
+	'checked' => (bool) $include_enqueued,
+]);
 
-$filter_body .= '<p>' . elgg_view('input/checkbox', $enqueued_input_options) . '</p>';
-
-$domain_input_options = array(
+// filter on e-mail domain
+$domain_input_options = [
+	'#type' => 'text',
+	'#label' => elgg_echo('bulk_user_admin:domain'),
+	'#help' => elgg_echo('bulk_user_admin:domain:help'),
 	'name' => 'domain',
 	'value' => $domain,
-	'class' => 'elgg-input-thin'
-);
-
-$input = elgg_view('input/text', $domain_input_options);
-$label = elgg_echo('bulk_user_admin:domain');
-$help = elgg_echo('bulk_user_admin:domain:help');
-$domain_count = '';
-$domain_count_txt = '';
-if ($domain) {
+	'class' => 'elgg-input-thin',
+];
+if (!empty($domain)) {
 	$domain_count = bulk_user_admin_get_users(array_merge($options, ['domain' => $domain]));
-	$domain_count_txt = elgg_echo('bulk_user_admin:domain_count', [$domain_count]);
+	$domain_input_options['#label'] .= elgg_format_element('span', ['class' => 'mls'], elgg_echo('bulk_user_admin:domain_count', [$domain_count]));
 }
 
-$filter_body .=<<<HTML
-<p>
-	<label>
-	$label
-	$input
-	$domain_count_txt
-	</label>
-	<span class='elgg-text-help'>$help</span>
-</p>
-HTML;
+$filter_body .= elgg_view_field($domain_input_options);
 
-$filter_body .= elgg_view('input/submit', array(
-	'value' => elgg_echo('update'),
-	'class' => 'elgg-button elgg-button-action mhm'
-));
+// buttons
+$filter_body .= elgg_view_field([
+	'#type' => 'fieldset',
+	'align' => 'horizontal',
+	'fields' => [
+		[
+			'#type' => 'submit',
+			'value' => elgg_echo('update'),
+		],
+		[
+			'#type' => 'reset',
+			'value' => elgg_echo('bulk_user_admin:clear'),
+			'onClick' => 'document.location.href = "/admin/users/bulk_user_admin"',
+		],
+	],
+]);
 
-$filter_body .= elgg_view('output/url', array(
-	'text' => elgg_echo('bulk_user_admin:clear'),
-	'class' => 'elgg-button elgg-button-action mhm',
-	'href' => '/admin/users/bulk_user_admin'
-));
-
-$filter_form = elgg_view('input/form', array(
+// make form
+$filter_form = elgg_view('input/form', [
 	'body' => $filter_body,
 	'action' => 'admin/users/bulk_user_admin',
 	'method' => 'get',
 	'disable_security' => true
-));
+]);
 
+// should the form be hidden
 $filter_class = 'hidden';
-
-if ($banned || $domain || $include_enqueued) {
+if ($banned || $domain || $include_enqueued || $spam) {
 	$filter_class = '';
 }
 

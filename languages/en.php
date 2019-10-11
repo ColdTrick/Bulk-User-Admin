@@ -38,4 +38,6 @@ return array(
 	'bulk_user_admin:filters' => 'Filters',
 	'bulk_user_admin:add_filters' => 'Add filters',
 	'bulk_user_admin:domain_count' => '(%s in domain)',
+	'bulk_user_admin:spam' => 'Potential spam accounts (%s total)',
+	'bulk_user_admin:spam:help' => "Users who have only default widgets and haven't used their account after an hour of it being created.",
 );

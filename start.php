@@ -58,6 +58,52 @@ function bulk_user_admin_get_sql_where_not_enqueued() {
 				AND md.value_id = $value_id)";
 }
 
+function bulk_user_admin_get_sql_where_spam() {
+	$db_prefix = get_config('dbprefix');
+	$wheres = [];
+	
+	// default widget count
+	$widget_contexts = elgg_trigger_plugin_hook('get_list', 'default_widgets', null, array());
+	$widget_subtype_id = get_subtype_id('object', 'widget');
+	$context = [];
+	foreach ($widget_contexts as $wc) {
+		$context[] = $wc['widget_context'];
+	}
+	$default_widget_count = elgg_get_entities_from_private_settings([
+		'type' => 'object',
+		'subtype' => 'widget',
+		'count' => true,
+		'owner_guid' => elgg_get_site_entity()->guid,
+		'private_setting_name_value_pairs' => [
+			'name' => 'context',
+			'value' => $context,
+		],
+	]);
+	if ($default_widget_count > 0) {
+		// user has x number of widgets
+		$wheres[] = "e.guid IN (
+			SELECT owner_guid
+			FROM {$db_prefix}entities
+			WHERE type = 'object' and subtype = {$widget_subtype_id}
+			GROUP BY owner_guid
+			HAVING count(*) = {$default_widget_count}
+		)";
+		// and only widgets
+		$wheres[] = "e.guid IN (
+			SELECT owner_guid
+			FROM {$db_prefix}entities
+			WHERE type = 'object'
+			GROUP BY owner_guid
+			HAVING count(*) = {$default_widget_count}
+		)";
+	}
+	
+	// last login within 1 hour of account creation
+	$wheres[] = 'bua_ue.last_login < (e.time_created + 3600)';
+	
+	return '((' . implode(') AND (', $wheres) . '))';
+}
+
 /**
  * Get users with a few more options
  *
@@ -72,6 +118,7 @@ function bulk_user_admin_get_users(array $sent) {
 	$defaults = [
 		'type' => 'user',
 		'domain' => false,
+		'spam' => false,
 		'only_banned' => false,
 		'enqueued' => 'exclude',
 		'wheres' => [],
@@ -84,14 +131,19 @@ function bulk_user_admin_get_users(array $sent) {
 	// use our own join to make sure.
 	$options['joins'][]= "JOIN {$db_prefix}users_entity bua_ue on e.guid = bua_ue.guid";
 
+	// limit to domain
 	if ($options['domain']) {
 		$options['wheres'][] = "bua_ue.email LIKE '%@%{$options['domain']}'";
 	}
+	unset($options['domain']);
 
+	// only banned users
 	if ($options['only_banned']) {
 		$options['wheres'][] = "bua_ue.banned = 'yes'";
 	}
+	unset($options['only_banned']);
 
+	// filter e-mail domain
 	switch ($options['enqueued']) {
 		case 'include':
 			// no-op
@@ -106,6 +158,13 @@ function bulk_user_admin_get_users(array $sent) {
 			$options['wheres'][] = bulk_user_admin_get_sql_where_not_enqueued();
 			break;
 	}
+	unset($options['enqueued']);
 
+	// only (potential) spam accounts
+	if ($options['spam']) {
+		$options['wheres'][] = bulk_user_admin_get_sql_where_spam();
+	}
+	unset($options['spam']);
+	
 	return elgg_get_entities_from_metadata($options);
 }

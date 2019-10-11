@@ -3,12 +3,11 @@
  * Form to delete users
  */
 
-
-
 $db_prefix = elgg_get_config('dbprefix');
 $users = elgg_extract('users', $vars);
 $domain = elgg_extract('domain', $vars);
 $only_banned = elgg_extract('banned', $vars);
+$spam = elgg_extract('spam', $vars);
 $include_enqueued = elgg_extract('include_enqueued', $vars);
 
 // profile fields
@@ -168,6 +167,13 @@ if ($only_banned) {
 	echo elgg_view('input/hidden', [
 		'name' => 'banned',
 		'value' => $only_banned
+	]);
+}
+
+if ($spam) {
+	echo elgg_view('input/hidden', [
+		'name' => 'spam',
+		'value' => $spam
 	]);
 }
 
