@@ -92,7 +92,6 @@ function bulk_user_admin_get_sql_where_spam() {
 		$wheres[] = "e.guid IN (
 			SELECT owner_guid
 			FROM {$db_prefix}entities
-			WHERE type = 'object'
 			GROUP BY owner_guid
 			HAVING count(*) = {$default_widget_count}
 		)";
